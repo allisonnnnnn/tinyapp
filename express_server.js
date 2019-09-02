@@ -32,16 +32,25 @@ app.get("/hello", (req, res) => {
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
+// why the path here is urls?why post request to /urls?
 app.post("/urls", (req, res) => {
-  console.log(req.body);
-  res.send("OK");
+  // console.log(req.body);
+  let key = generateRandomString();
+  urlDatabase[key] = req.body.longURL;
+  res.redirect("/urls");
 });
 
 app.get("/urls/:shortURL", (req, res) => {
+  // console.log(req.body);
+  // console.log(req.params);
   res.render("urls_show", {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL]
   });
+});
+
+app.get("/u/:shortURL", (req, res) => {
+  res.redirect(urlDatabase[req.params.shortURL]);
 });
 
 app.listen(PORT, () => {
