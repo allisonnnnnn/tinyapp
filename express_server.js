@@ -4,14 +4,19 @@ const PORT = 8080;
 
 app.set("view engine", "ejs");
 
+// Database
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
 
-// handler on root path'/'
+// Route Handlers
 app.get("/", (req, res) => {
   res.send("hello!");
+});
+
+app.get("/urls", (req, res) => {
+  res.render("urls_index", { urls: urlDatabase });
 });
 
 app.get("/urls.json", (req, res) => {
