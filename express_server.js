@@ -2,9 +2,11 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Database
 const urlDatabase = {
@@ -18,7 +20,10 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  res.render("urls_index", { urls: urlDatabase });
+  res.render("urls_index", {
+    urls: urlDatabase,
+    username: req.cookies.username
+  });
 });
 
 app.get("/urls.json", (req, res) => {
@@ -30,7 +35,7 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  res.render("urls_new", { username: req.cookies.username });
 });
 // why the path here is urls?why post request to /urls?
 app.post("/urls", (req, res) => {
@@ -51,7 +56,8 @@ app.get("/urls/:shortURL", (req, res) => {
 
   res.render("urls_show", {
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL]
+    longURL: urlDatabase[req.params.shortURL],
+    username: req.cookies.username
   });
 });
 
@@ -59,6 +65,7 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(urlDatabase[req.params.shortURL]);
 });
 
+// Delete
 app.post("/urls/:shortURL/delete", (req, res) => {
   // console.log(req.params);
   // delete key
@@ -70,6 +77,19 @@ app.post("/urls/:shortURL", (req, res) => {
   // console.log(req.body.longURL);
   // console.log(req.params);
   urlDatabase[req.params.shortURL] = req.body.longURL;
+  res.redirect("/urls");
+});
+
+// Login & Set cookies
+app.post("/login", (req, res) => {
+  res.cookie("username", req.body.username);
+  // console.log(req.body);
+  res.redirect("urls");
+});
+
+// Logout
+app.post("/logout", (req, res) => {
+  res.clearCookie("username");
   res.redirect("/urls");
 });
 
