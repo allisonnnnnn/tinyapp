@@ -31,6 +31,7 @@ const findUser = function(userId) {
   if (users[userId]) {
     return users[userId];
   }
+  return null;
 };
 
 const urlsForUser = function(id) {

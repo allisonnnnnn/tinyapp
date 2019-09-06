@@ -31,7 +31,7 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   res.render("urls_index", {
     urls: urlsForUser(req.session.user_id),
-    // longURL: urlDatabase[req.params.shortURL].longURL,
+
     user: findUser(req.session.user_id)
   });
 });
@@ -47,26 +47,30 @@ app.get("/urls/new", (req, res) => {
     res.redirect("/login");
   }
 });
-// why the path here is urls?why post request to /urls?
+
 app.post("/urls", (req, res) => {
   let key = generateRandomString();
-  // urlDatabase[key] = req.body.longURL;
+
   urlDatabase[key] = {
     userID: req.session.user_id,
     longURL: req.body.longURL
   };
-  // console.log(req.body.longURL);
+
   res.redirect("/urls");
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  res.render("urls_show", {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL].longURL,
-    user: findUser(req.session.user_id),
-    urls: urlsForUser(req.session.user_id),
-    userID: urlDatabase[req.params.shortURL].userID
-  });
+  const url = urlDatabase[req.params.shortURL];
+  if (url && url.userID === req.session.user_id) {
+    res.render("urls_show", {
+      shortURL: req.params.shortURL,
+      longURL: urlDatabase[req.params.shortURL].longURL,
+      user: findUser(req.session.user_id),
+      urls: urlsForUser(req.session.user_id),
+      userID: urlDatabase[req.params.shortURL].userID
+    });
+  }
+  res.redirect("/login");
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -80,9 +84,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-// ??
 app.post("/urls/:shortURL", (req, res) => {
-  console.log(urlDatabase[req.params.shortURL]);
   if (req.session.user_id === urlDatabase[req.params.shortURL].userID) {
     urlDatabase[req.params.shortURL].longURL = req.body.longURL;
   }
@@ -100,25 +102,25 @@ app.post("/login", (req, res) => {
 
   for (let user in users) {
     if (users[user].email === req.body.email) {
-      if (users[user].password === req.body.password) {
+      if (bcrypt.compareSync(req.body.password, users[user].password)) {
         randomID = user;
-        // res.cookie("user_id", randomID);
-        // req.session("user_id", randomID);
+
         req.session.user_id = randomID;
+
         res.redirect("/urls");
         return;
       } else {
-        res.status(403);
+        res.status(403).send("Email or Password does not match");
       }
     }
   }
-  res.status(403);
+  res.status(403).send("Email does not exist");
 });
 
 // Logout
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
-  // req.session = null?
+
   res.redirect("/urls");
 });
 
@@ -139,11 +141,8 @@ app.post("/register", (req, res) => {
       email: req.body.email,
       password: bcrypt.hashSync(req.body.password, 10)
     };
-    console.log("users", users);
-    // Set Cookie
-    // res.cookie("user_id", randomID);
 
-    // req.session("user_id", randomID);
+    // Set Cookie
     req.session.user_id = randomID;
     res.redirect("/urls");
   }
@@ -164,8 +163,4 @@ const generateRandomString = function() {
   return result;
 };
 
-// Edit does not work
-// logout --> /urls
 // does not show long urls
-// register -> logout --> cannot relogin
-// Similarly, this also means that the /urls/:id page should display a message or prompt if the user is not logged in, or if the the URL with the matching :id does not belong to them.
